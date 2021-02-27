@@ -3,7 +3,7 @@ const SMTPServer = require('smtp-server').SMTPServer;
 const MailParser = require('mailparser').simpleParser;
 const PassThrough = require('stream').PassThrough;
 const sanitize = require('./lib/email-sanitize');
-const Email = require('./models/email');
+//const Email = require('./models/email');
 
 const server = new SMTPServer({
 	name: config.mail.hostname,
@@ -12,6 +12,7 @@ const server = new SMTPServer({
 	disabledCommands: ['AUTH', 'STARTTLS'],
 	onRcptTo: (address, session, callback) => {
 		// Only accept whitelisted recipient address domains
+console.log("add ",address.address);
 		for (const domain of config.mail.domains) {
 			if (address.address.endsWith('@' + domain)) {
 				return callback();
@@ -22,7 +23,7 @@ const server = new SMTPServer({
 	},
 	onData: (stream, session, callback) => {
 		const original = new PassThrough();
-
+console.log("data in");
 		MailParser(stream).then(email => {
 			streamToString(original, originalMsg => {
 				email.original = originalMsg;
@@ -40,8 +41,8 @@ const server = new SMTPServer({
 				sanitize(email.text, email.html, email.subject, (text, html) => {
 					email.text = text;
 					email.html = html;
-
-					new Email(email).save();
+console.log("ema ",email);
+//					new Email(email).save();
 
 					callback();
 				});
@@ -64,4 +65,4 @@ const server = new SMTPServer({
 	}
 });
 
-server.listen(process.env.PORT || config.mail.port, process.env.HOST || config.mail.host);
+server.listen(process.env.PORT || config.mail.port, process.env.HOST || config.mail.host,(err)=>{console.log("mail-server start");});
